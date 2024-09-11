@@ -8,3 +8,5 @@ class ItemListCreateView(generics.ListCreateAPIView):
     serializer_class = ProductSerializer
 
     
+def test(request):
+    return render(request, 'index.html')

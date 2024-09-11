@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AJAX POST и GET запросы</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Отправить данные на сервер</h1>
+    <form id="myForm">
+        <input type="text" id="name" placeholder="Название" required>
+        <input type="text" id="description" placeholder="Описание" required>
+        <input type="number" id="price" placeholder="Цена" required>
+        <button type="submit">Отправить</button>
+    </form>
+    <div id="response"></div>
+
+    <h2>Список записей</h2>
+    <table id="recordsTable">
+        <thead>
+            <tr>
+                <th>Название</th>
+                <th>Описание</th>
+                <th>Цена</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <script>
+        function fetchRecords() {
+            fetch("http://127.0.0.1:8000/api/v1/")
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Сетевая ошибка при загрузке записей');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const recordsTableBody = document.getElementById('recordsTable').querySelector('tbody');
+                    recordsTableBody.innerHTML = '';
+                    data.forEach(record => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${record.name}</td>
+                            <td>${record.description}</td>
+                            <td>${record.price}</td>
+                        `;
+                        recordsTableBody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    document.getElementById('response').innerText = "Ошибка при загрузке записей: " + error;
+                });
+        }
+
+        window.onload = fetchRecords;
+
+        document.getElementById('myForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            var data = {
+                name: document.getElementById('name').value,
+                description: document.getElementById('description').value,
+                price: document.getElementById('price').value
+            };
+
+            fetch("http://127.0.0.1:8000/api/v1/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Сетевая ошибка');
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('response').innerText = "Успех: " + JSON.stringify(data);
+                fetchRecords();
+            })
+            .catch(error => {
+                document.getElementById('response').innerText = "Ошибка: " + error;
+            });
+        });
+    </script>
